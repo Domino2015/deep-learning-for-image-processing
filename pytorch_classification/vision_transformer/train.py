@@ -20,8 +20,9 @@ def main(args):
     if os.path.exists("./weights") is False:
         os.makedirs("./weights")
 
+    # Writer will output to ./runs/ directory by default
     tb_writer = SummaryWriter()
-
+    #数据预处理、训练集/验证集划分
     train_images_path, train_images_label, val_images_path, val_images_label = read_split_data(args.data_path)
 
     data_transform = {
@@ -116,7 +117,7 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--num_classes', type=int, default=5)
-    parser.add_argument('--epochs', type=int, default=10)
+    parser.add_argument('--epochs', type=int, default=30)
     parser.add_argument('--batch-size', type=int, default=8)
     parser.add_argument('--lr', type=float, default=0.001)
     parser.add_argument('--lrf', type=float, default=0.01)
@@ -124,7 +125,7 @@ if __name__ == '__main__':
     # 数据集所在根目录
     # https://storage.googleapis.com/download.tensorflow.org/example_images/flower_photos.tgz
     parser.add_argument('--data-path', type=str,
-                        default="/data/flower_photos")
+                        default="./data/flower_photos")
     parser.add_argument('--model-name', default='', help='create model name')
 
     # 预训练权重路径，如果不想载入就设置为空字符
@@ -133,7 +134,7 @@ if __name__ == '__main__':
     # 是否冻结权重
     parser.add_argument('--freeze-layers', type=bool, default=True)
     parser.add_argument('--device', default='cuda:0', help='device id (i.e. 0 or 0,1 or cpu)')
-
+    # 将这些参数构造成为合理的参数类型
     opt = parser.parse_args()
 
     main(opt)

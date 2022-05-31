@@ -17,12 +17,15 @@ def main():
     net = LeNet()
     net.load_state_dict(torch.load('Lenet.pth'))
 
-    im = Image.open('1.jpg')
+    im = Image.open('test1.jpg')
+    # 转换为Tensor
     im = transform(im)  # [C, H, W]
+    # 在Tensor最前面（dim=0）添加一个 batch 维度
     im = torch.unsqueeze(im, dim=0)  # [N, C, H, W]
-
+    #不需要求损失参数
     with torch.no_grad():
         outputs = net(im)
+        # predict = torch.softmax(outputs, dim=1) #输出概率和为1的概率分布
         predict = torch.max(outputs, dim=1)[1].numpy()
     print(classes[int(predict)])
 
