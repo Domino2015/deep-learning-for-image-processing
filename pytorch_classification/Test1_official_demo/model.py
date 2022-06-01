@@ -41,8 +41,8 @@ class LeNet(nn.Module):
 
 
 
-# import torch
-# input1=torch.rand([32,3,32,32])
-# model=LeNet()
-# print(model)
-# output=model(input1)
+import torch
+input1=torch.rand([32,3,32,32])
+model=LeNet()
+print(model)
+output=model(input1)

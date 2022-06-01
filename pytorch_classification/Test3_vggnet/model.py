@@ -58,6 +58,7 @@ def make_features(cfg: list):
             conv2d = nn.Conv2d(in_channels, v, kernel_size=3, padding=1)
             layers += [conv2d, nn.ReLU(True)]
             in_channels = v
+    # *layers 非关键字参数传入
     return nn.Sequential(*layers)
 
 

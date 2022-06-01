@@ -18,6 +18,7 @@ def main():
     print("using {} device.".format(device))
 
     data_transform = {
+        # 随机裁剪 随机翻转
         "train": transforms.Compose([transforms.RandomResizedCrop(224),
                                      transforms.RandomHorizontalFlip(),
                                      transforms.ToTensor(),
@@ -74,10 +75,12 @@ def main():
 
     net.to(device)
     loss_function = nn.CrossEntropyLoss()
+    # 查询模型的参数
     # pata = list(net.parameters())
+    # 优化器
     optimizer = optim.Adam(net.parameters(), lr=0.0002)
 
-    epochs = 10
+    epochs = 20
     save_path = './AlexNet.pth'
     best_acc = 0.0
     train_steps = len(train_loader)
@@ -102,6 +105,7 @@ def main():
                                                                      loss)
 
         # validate
+        # 因为在网络中使用dropout 但是在验证中不需要
         net.eval()
         acc = 0.0  # accumulate accurate number / epoch
         with torch.no_grad():

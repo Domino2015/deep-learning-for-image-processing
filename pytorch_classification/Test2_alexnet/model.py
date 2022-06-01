@@ -5,8 +5,11 @@ import torch
 class AlexNet(nn.Module):
     def __init__(self, num_classes=1000, init_weights=False):
         super(AlexNet, self).__init__()
+        # nn.Sequential相当于把一系列的层级结构进行 打包成一个新的模块/结构 features
         self.features = nn.Sequential(
+            #  卷积发现输出size是小数 会舍弃剩下的区域，会直接将最后一行和最后一列给忽略掉，以保证N为整数
             nn.Conv2d(3, 48, kernel_size=11, stride=4, padding=2),  # input[3, 224, 224]  output[48, 55, 55]
+            # inplace=True 支持载入更大模型
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=3, stride=2),                  # output[48, 27, 27]
             nn.Conv2d(48, 128, kernel_size=5, padding=2),           # output[128, 27, 27]
@@ -29,17 +32,20 @@ class AlexNet(nn.Module):
             nn.ReLU(inplace=True),
             nn.Linear(2048, num_classes),
         )
+
         if init_weights:
             self._initialize_weights()
 
     def forward(self, x):
         x = self.features(x)
+        # 从channle开始展平
         x = torch.flatten(x, start_dim=1)
         x = self.classifier(x)
         return x
 
     def _initialize_weights(self):
         for m in self.modules():
+            # 判断层的名称
             if isinstance(m, nn.Conv2d):
                 nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
                 if m.bias is not None:

@@ -22,7 +22,7 @@ def main():
     im = transform(im)  # [C, H, W]
     # 在Tensor最前面（dim=0）添加一个 batch 维度
     im = torch.unsqueeze(im, dim=0)  # [N, C, H, W]
-    #不需要求损失参数
+    # 不需要 求损失参数 disable gradients
     with torch.no_grad():
         outputs = net(im)
         # predict = torch.softmax(outputs, dim=1) #输出概率和为1的概率分布
