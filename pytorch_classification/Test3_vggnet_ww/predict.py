@@ -9,7 +9,7 @@ from torchvision import transforms, datasets, utils
 
 from tqdm import tqdm
 
-from model import AlexNet
+from model import vgg16
 
 import numpy as np
 
@@ -45,9 +45,9 @@ def main():
     print("using {} images for test.".format(test_num))
 
     # create model
-    model = AlexNet(num_classes=5).to(device)
+    model = vgg16(num_classes=5).to(device)
     # load model weights
-    weights_path = "./AlexNet.pth"
+    weights_path = "./VGG16.pth"
     assert os.path.exists(weights_path), "file: '{}' dose not exist.".format(weights_path)
     model.load_state_dict(torch.load(weights_path))
 
