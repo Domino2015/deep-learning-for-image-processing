@@ -3,6 +3,7 @@ import torch
 import torch.nn.functional as F
 
 
+
 class GoogLeNet(nn.Module):
     def __init__(self, num_classes=1000, aux_logits=True, init_weights=False):
         super(GoogLeNet, self).__init__()

@@ -4,11 +4,13 @@ import json
 
 import torch
 import torch.nn as nn
-from torchvision import transforms, datasets
+from torchvision import transforms, datasets, utils
+import matplotlib.pyplot as plt
+import numpy as np
 import torch.optim as optim
 from tqdm import tqdm
 
-from model import GoogLeNet
+from model import GoogLeNet_ww
 
 
 def main():
@@ -16,13 +18,19 @@ def main():
     print("using {} device.".format(device))
 
     data_transform = {
+        # 随机裁剪 随机翻转
         "train": transforms.Compose([transforms.RandomResizedCrop(224),
                                      transforms.RandomHorizontalFlip(),
                                      transforms.ToTensor(),
                                      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]),
-        "val": transforms.Compose([transforms.Resize((224, 224)),
+        "val": transforms.Compose([transforms.Resize((224, 224)),  # cannot 224, must (224, 224)
                                    transforms.ToTensor(),
-                                   transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])}
+                                   transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]),
+        "test": transforms.Compose([transforms.Resize((224, 224)),  # cannot 224, must (224, 224)
+                                    transforms.ToTensor(),
+                                    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])}
+
+
 
     data_root = os.path.abspath(os.path.join(os.getcwd(), "../.."))  # get data root path
     image_path = os.path.join(data_root, "data_set", "flower_data")  # flower data set path
@@ -39,7 +47,7 @@ def main():
     with open('class_indices.json', 'w') as json_file:
         json_file.write(json_str)
 
-    batch_size = 32
+    batch_size = 64
     nw = min([os.cpu_count(), batch_size if batch_size > 1 else 0, 8])  # number of workers
     print('Using {} dataloader workers every process'.format(nw))
 
@@ -54,33 +62,42 @@ def main():
                                                   batch_size=batch_size, shuffle=False,
                                                   num_workers=nw)
 
-    print("using {} images for training, {} images for validation.".format(train_num,
-                                                                           val_num))
 
+    test_dataset = datasets.ImageFolder(root=os.path.join(image_path, "test"),
+                                            transform=data_transform["test"])
+    test_num = len(test_dataset)
+    test_loader = torch.utils.data.DataLoader(test_dataset,
+                                                  batch_size=test_num, shuffle=False,
+                                                  num_workers=nw)
+
+
+    print("using {} images for training, {} images for validation, {} images for test.".format(train_num,
+                                                                           val_num,
+                                                                           test_num))
     # test_data_iter = iter(validate_loader)
     # test_image, test_label = test_data_iter.next()
+    #
+    # def imshow(img):
+    #     img = img / 2 + 0.5  # unnormalize
+    #     npimg = img.numpy()
+    #     plt.imshow(np.transpose(npimg, (1, 2, 0)))
+    #     plt.show()
+    #
+    # print(' '.join('%5s' % cla_dict[test_label[j].item()] for j in range(4)))
+    # imshow(utils.make_grid(test_image))
 
-    net = GoogLeNet(num_classes=5, aux_logits=True, init_weights=True)
-    # 如果要使用官方的预训练权重，注意是将权重载入官方的模型，不是我们自己实现的模型
-    # 官方的模型中使用了bn层以及改了一些参数，不能混用
-    # import torchvision
-    # net = torchvision.models.googlenet(num_classes=5)
-    # model_dict = net.state_dict()
-    # # 预训练权重下载地址: https://download.pytorch.org/models/googlenet-1378be20.pth
-    # pretrain_model = torch.load("googlenet.pth")
-    # del_list = ["aux1.fc2.weight", "aux1.fc2.bias",
-    #             "aux2.fc2.weight", "aux2.fc2.bias",
-    #             "fc.weight", "fc.bias"]
-    # pretrain_dict = {k: v for k, v in pretrain_model.items() if k not in del_list}
-    # model_dict.update(pretrain_dict)
-    # net.load_state_dict(model_dict)
+    net = GoogLeNet_ww(num_classes=5, init_weights=True)
+
     net.to(device)
     loss_function = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(net.parameters(), lr=0.0003)
+    # 查询模型的参数
+    # pata = list(net.parameters())
+    # 优化器
+    optimizer = optim.Adam(net.parameters(), lr=0.0002)
 
     epochs = 1
+    save_path = './GoogLeNet.pth'
     best_acc = 0.0
-    save_path = './googleNet.pth'
     train_steps = len(train_loader)
     for epoch in range(epochs):
         # train
@@ -90,11 +107,13 @@ def main():
         for step, data in enumerate(train_bar):
             images, labels = data
             optimizer.zero_grad()
-            logits, aux_logits2, aux_logits1 = net(images.to(device))
-            loss0 = loss_function(logits, labels.to(device))
-            loss1 = loss_function(aux_logits1, labels.to(device))
-            loss2 = loss_function(aux_logits2, labels.to(device))
-            loss = loss0 + loss1 * 0.3 + loss2 * 0.3
+            logits, aux_logits1, aux_logits2 = net(images.to(device))
+
+            loss1 = loss_function(logits, labels.to(device))
+            loss2 = loss_function(aux_logits1, labels.to(device))
+            loss3 = loss_function(aux_logits2, labels.to(device))
+            loss = loss1+loss2*0.3+loss3*0.3
+
             loss.backward()
             optimizer.step()
 
@@ -106,13 +125,14 @@ def main():
                                                                      loss)
 
         # validate
+        # 因为在网络中使用dropout 但是在验证中不需要
         net.eval()
         acc = 0.0  # accumulate accurate number / epoch
         with torch.no_grad():
             val_bar = tqdm(validate_loader, file=sys.stdout)
             for val_data in val_bar:
                 val_images, val_labels = val_data
-                outputs = net(val_images.to(device))  # eval model only have last output layer
+                outputs = net(val_images.to(device))
                 predict_y = torch.max(outputs, dim=1)[1]
                 acc += torch.eq(predict_y, val_labels.to(device)).sum().item()
 

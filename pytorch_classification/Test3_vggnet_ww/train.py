@@ -95,7 +95,7 @@ def main():
     # 优化器
     optimizer = optim.Adam(net.parameters(), lr=0.0002)
 
-    epochs = 30
+    epochs = 1
     save_path = './VGG16.pth'
     best_acc = 0.0
     train_steps = len(train_loader)
