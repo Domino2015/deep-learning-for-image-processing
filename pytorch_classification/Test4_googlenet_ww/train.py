@@ -86,14 +86,14 @@ def main():
     # print(' '.join('%5s' % cla_dict[test_label[j].item()] for j in range(4)))
     # imshow(utils.make_grid(test_image))
 
-    net = GoogLeNet_ww(num_classes=5, init_weights=True)
+    net = GoogLeNet_ww(num_classes=5, init_weights=True,aux_logits=True,)
 
     net.to(device)
     loss_function = nn.CrossEntropyLoss()
     # 查询模型的参数
     # pata = list(net.parameters())
     # 优化器
-    optimizer = optim.Adam(net.parameters(), lr=0.0002)
+    optimizer = optim.Adam(net.parameters(), lr=0.0003)
 
     epochs = 1
     save_path = './GoogLeNet.pth'
@@ -107,7 +107,7 @@ def main():
         for step, data in enumerate(train_bar):
             images, labels = data
             optimizer.zero_grad()
-            logits, aux_logits1, aux_logits2 = net(images.to(device))
+            logits, aux_logits2, aux_logits1 = net(images.to(device))
 
             loss1 = loss_function(logits, labels.to(device))
             loss2 = loss_function(aux_logits1, labels.to(device))

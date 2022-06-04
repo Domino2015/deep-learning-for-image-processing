@@ -173,3 +173,11 @@ class BasicConv2d(nn.Module):
         x = self.conv(x)
         x = self.relu(x)
         return x
+
+
+import torch
+
+input1=torch.rand([125,3,224,224])
+model=GoogLeNet()
+print(model)
+output=model(input1)

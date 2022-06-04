@@ -14,24 +14,26 @@ class BasicConv2d(nn.Module):
         x = self.relu(x)
         return x
 
+
 class InceptionAux(nn.Module):
-    def __init__(self,in_channles,num_classes):
+    def __init__(self, in_channles, num_classes):
         super(InceptionAux, self).__init__()
-        self.avgpool1=nn.AvgPool2d(kernel_size=5, stride=3)
+        self.avgpool1 = nn.AvgPool2d(kernel_size=5, stride=3)
         self.conv = BasicConv2d(in_channles, 128, kernel_size=1)  # output[batch, 128, 4, 4]
 
         self.fc1 = nn.Linear(2048, 1024)
         self.fc2 = nn.Linear(1024, num_classes)
 
-    def forward(self,x):
+    def forward(self, x):
         x = self.avgpool1(x)
         x = self.conv(x)
         x = torch.flatten(x, 1)
-        x = self.dropout(x, 0.5, training=self.training)
-        x = self.relu(self.fc1(x), inplace=True)
-        x = self.dropout(x, 0.5, training=self.training)
+        x = F.dropout(x, 0.5, training=self.training)
+        x = F.relu(self.fc1(x), inplace=True)
+        x = F.dropout(x, 0.5, training=self.training)
         x = self.fc2(x)
         return x
+
 
 class Inception(nn.Module):
     def __init__(self, in_channels, ch1_1, ch3_3red, ch3_3, ch5_5red, ch5_5, pool_proj):
@@ -63,10 +65,12 @@ class Inception(nn.Module):
 
 
 class GoogLeNet_ww(nn.Module):
-    def __init__(self, num_classes=1000, init_weights=True,aux_logits=True):
+    def __init__(self, num_classes=1000, init_weights=True, aux_logits=True):
         super(GoogLeNet_ww, self).__init__()
         self.aux_logits = aux_logits
-        self.conv1 = BasicConv2d(3, 64, kernel_size=7, stride=3, padding=3)
+        # FIXME:写错了!!!!!!!!!!!!!!
+        # self.conv1 = BasicConv2d(3, 64, kernel_size=7, stride=3, padding=3)
+        self.conv1 = BasicConv2d(3, 64, kernel_size=7, stride=2, padding=3)
         self.maxpool1 = nn.MaxPool2d(3, stride=2, ceil_mode=True)
 
         self.conv2 = BasicConv2d(64, 64, kernel_size=1)
@@ -109,14 +113,14 @@ class GoogLeNet_ww(nn.Module):
 
         x = self.maxpool3(x)
         x = self.inception4a(x)
-        if self.training and self.aux_logits:    # eval model lose this layer
+        if self.training and self.aux_logits:  # eval model lose this layer
             aux1 = self.aux1(x)
 
         x = self.inception4b(x)
         x = self.inception4c(x)
         x = self.inception4d(x)
-        if self.training and self.aux_logits:    # eval model lose this layer
-            aux2 = self.aux1(x)
+        if self.training and self.aux_logits:  # eval model lose this layer
+            aux2 = self.aux2(x)
 
         x = self.inception4e(x)
         x = self.maxpool4(x)
@@ -127,7 +131,7 @@ class GoogLeNet_ww(nn.Module):
         x = torch.flatten(x, 1)
         x = self.dropout(x)
         x = self.fc(x)
-        if self.training and self.aux_logits:   # eval model lose this layer
+        if self.training and self.aux_logits:  # eval model lose this layer
             return x, aux2, aux1
         return x
 
@@ -141,11 +145,9 @@ class GoogLeNet_ww(nn.Module):
                 nn.init.normal_(m.weight, 0, 0.01)
                 nn.init.constant_(m.bias, 0)
 
+import torch
 
-
-# import torch
-#
-# input1=torch.rand([32,3,224,224])
-# model=GoogLeNet_ww()
-# print(model)
-# output=model(input1)
+input1=torch.rand([32,3,224,224])
+model=GoogLeNet_ww()
+print(model)
+output=model(input1)
