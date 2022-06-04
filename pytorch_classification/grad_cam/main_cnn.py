@@ -40,8 +40,8 @@ def main():
     input_tensor = torch.unsqueeze(img_tensor, dim=0)
 
     cam = GradCAM(model=model, target_layers=target_layers, use_cuda=False)
-    target_category = 281  # tabby, tabby cat
-    # target_category = 254  # pug, pug-dog
+    # target_category = 281  # tabby, tabby cat
+    target_category = 254  # pug, pug-dog
 
     grayscale_cam = cam(input_tensor=input_tensor, target_category=target_category)
 

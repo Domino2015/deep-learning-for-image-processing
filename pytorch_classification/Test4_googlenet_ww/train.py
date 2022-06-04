@@ -95,7 +95,7 @@ def main():
     # 优化器
     optimizer = optim.Adam(net.parameters(), lr=0.0003)
 
-    epochs = 1
+    epochs = 20
     save_path = './GoogLeNet.pth'
     best_acc = 0.0
     train_steps = len(train_loader)

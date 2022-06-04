@@ -144,10 +144,10 @@ class GoogLeNet_ww(nn.Module):
             elif isinstance(m, nn.Linear):
                 nn.init.normal_(m.weight, 0, 0.01)
                 nn.init.constant_(m.bias, 0)
-
-import torch
-
-input1=torch.rand([32,3,224,224])
-model=GoogLeNet_ww()
-print(model)
-output=model(input1)
+#
+# import torch
+#
+# input1=torch.rand([32,3,224,224])
+# model=GoogLeNet_ww()
+# print(model)
+# output=model(input1)
